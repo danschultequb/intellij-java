@@ -200,6 +200,17 @@ public class IntellijModule
         return this;
     }
 
+    public Iterable<IntellijModuleLibrary> getModuleLibraries()
+    {
+        return this.getOrCreateComponentElement()
+            .getElementChildren((XMLElement childElement) ->
+                childElement.getName().equals(IntellijModule.orderEntryElementName) &&
+                Comparer.equal(
+                    childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await(),
+                    IntellijModuleLibrary.typeAttributeValue))
+            .map(IntellijModuleLibrary::create);
+    }
+
     public IntellijModule addModuleLibrary(IntellijModuleLibrary moduleLibrary)
     {
         PreCondition.assertNotNull(moduleLibrary, "moduleLibrary");

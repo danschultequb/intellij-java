@@ -83,6 +83,14 @@ public class IntellijModuleLibrary
         return IntellijModuleLibrary.getOrCreateElement(this.getOrCreateLibraryElement(), IntellijModuleLibrary.sourcesElementName);
     }
 
+    public Iterable<String> getClassesUrls()
+    {
+        return this.getOrCreateClassesElement()
+            .getElementChildren(IntellijModuleLibrary.rootElementName)
+            .map((XMLElement rootElement) -> rootElement.getAttributeValue(IntellijModuleLibrary.urlAttributeName).catchError().await())
+            .where((String classesUrl) -> !Strings.isNullOrEmpty(classesUrl));
+    }
+
     public IntellijModuleLibrary addClassesUrl(String classesUrl)
     {
         PreCondition.assertNotNullAndNotEmpty(classesUrl, "classesUrl");
@@ -101,6 +109,14 @@ public class IntellijModuleLibrary
             .setSplit(false);
 
         return this;
+    }
+
+    public Iterable<String> getSourcesUrls()
+    {
+        return this.getOrCreateSourcesElement()
+            .getElementChildren(IntellijModuleLibrary.rootElementName)
+            .map((XMLElement rootElement) -> rootElement.getAttributeValue(IntellijModuleLibrary.urlAttributeName).catchError().await())
+            .where((String sourcesUrl) -> !Strings.isNullOrEmpty(sourcesUrl));
     }
 
     public IntellijModuleLibrary addSourcesUrl(String sourcesUrl)
