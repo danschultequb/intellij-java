@@ -79,46 +79,21 @@ public class IntellijModule
             .then((XMLDocument xmlDocument) -> IntellijModule.create(xmlDocument));
     }
 
-    private static XMLElement getOrCreateElement(XMLElement parentElement, String childElementName, Action1<XMLElement> setupChildElement)
-    {
-        PreCondition.assertNotNull(parentElement, "parentElement");
-        PreCondition.assertNotNullAndNotEmpty(childElementName, "childElementName");
-        PreCondition.assertNotNull(setupChildElement, "setupChildElement");
-
-        XMLElement result = parentElement.getElementChildren(childElementName).first();
-        if (result == null)
-        {
-            result = XMLElement.create(childElementName);
-            setupChildElement.run(result);
-            parentElement.addChild(result);
-        }
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
-    private static XMLElement getOrCreateElement(XMLElement parentElement, String childElementName)
-    {
-        PreCondition.assertNotNull(parentElement, "parentElement");
-        PreCondition.assertNotNullAndNotEmpty(childElementName, "childElementName");
-
-        return IntellijModule.getOrCreateElement(parentElement, childElementName, (XMLElement childElement) -> {});
-    }
-
     private XMLElement getOrCreateComponentElement()
     {
-        return IntellijModule.getOrCreateElement(this.document.getRoot(), IntellijModule.componentElementName, (XMLElement componentElement) ->
-        {
-            componentElement.setAttribute(IntellijModule.componentNameAttributeName, IntellijModule.componentNameAttributeValue);
-        });
+        return this.document.getRoot()
+            .getFirstOrCreateElementChild(
+                IntellijModule.componentElementName,
+                () -> XMLElement.create(IntellijModule.componentElementName)
+                    .setAttribute(IntellijModule.componentNameAttributeName, IntellijModule.componentNameAttributeValue));
     }
 
     public IntellijModule setOutputUrl(String outputUrl)
     {
         PreCondition.assertNotNullAndNotEmpty(outputUrl, "outputUrl");
 
-        IntellijModule.getOrCreateElement(this.getOrCreateComponentElement(), IntellijModule.outputElementName)
+        this.getOrCreateComponentElement()
+            .getFirstOrCreateElementChild(IntellijModule.outputElementName)
             .setAttribute(IntellijModule.outputUrlAttributeName, outputUrl);
 
         return this;
@@ -126,7 +101,10 @@ public class IntellijModule
 
     public IntellijModule setOutputTestUrl(String outputTestUrl)
     {
-        IntellijModule.getOrCreateElement(this.getOrCreateComponentElement(), IntellijModule.outputTestElementName)
+        PreCondition.assertNotNullAndNotEmpty(outputTestUrl, "outputTestUrl");
+
+        this.getOrCreateComponentElement()
+            .getFirstOrCreateElementChild(IntellijModule.outputTestElementName)
             .setAttribute(IntellijModule.outputTestUrlAttributeName, outputTestUrl);
 
         return this;
@@ -137,7 +115,7 @@ public class IntellijModule
         final XMLElement componentElement = this.getOrCreateComponentElement();
         if (excludeOutput)
         {
-            IntellijModule.getOrCreateElement(componentElement, IntellijModule.excludeOutputElementName);
+            componentElement.getFirstOrCreateElementChild(IntellijModule.excludeOutputElementName);
         }
         else
         {
@@ -153,10 +131,12 @@ public class IntellijModule
     {
         PreCondition.assertNotNull(sourceFolder, "sourceFolder");
 
-        final XMLElement contentElement = IntellijModule.getOrCreateElement(this.getOrCreateComponentElement(), IntellijModule.contentElementName, (XMLElement createdContentElement) ->
-        {
-            createdContentElement.setAttribute(IntellijModule.contentUrlAttributeName, IntellijModule.contentUrlAttributeValue);
-        });
+        final XMLElement contentElement = this.getOrCreateComponentElement()
+            .getFirstOrCreateElementChild(
+                IntellijModule.contentElementName,
+                () -> XMLElement.create(IntellijModule.contentElementName)
+                    .setAttribute(IntellijModule.contentUrlAttributeName, IntellijModule.contentUrlAttributeValue));
+
         contentElement.addChild(sourceFolder.toXML());
 
         return this;
@@ -165,10 +145,11 @@ public class IntellijModule
     public IntellijModule setInheritedJdk(boolean inheritedJdk)
     {
         final XMLElement componentElement = this.getOrCreateComponentElement();
-        final XMLElement inheritedJdkElement = componentElement.getElementChildren((XMLElement childElement) ->
+        final XMLElement inheritedJdkElement = componentElement.getFirstElementChild((XMLElement childElement) ->
             IntellijModule.orderEntryElementName.equals(childElement.getName()) &&
             IntellijModule.inheritedJdkAttributeValue.equals(childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await()))
-            .first();
+            .catchError(NotFoundException.class)
+            .await();
         if (inheritedJdk && inheritedJdkElement == null)
         {
             componentElement.addChild(XMLElement.create(IntellijModule.orderEntryElementName)
@@ -241,6 +222,15 @@ public class IntellijModule
             .removeChild(moduleLibrary.toXML());
     }
 
+    /**
+     * Get the XML representation of this object.
+     * @return The XML representation of this object.
+     */
+    public XMLDocument toXML()
+    {
+        return this.document;
+    }
+
     @Override
     public String toString()
     {
@@ -254,12 +244,14 @@ public class IntellijModule
         return this.toXML().toString(format);
     }
 
-    /**
-     * Get the XML representation of this object.
-     * @return The XML representation of this object.
-     */
-    public XMLDocument toXML()
+    @Override
+    public boolean equals(Object rhs)
     {
-        return this.document;
+        return rhs instanceof IntellijModule && this.equals((IntellijModule)rhs);
+    }
+
+    public boolean equals(IntellijModule rhs)
+    {
+        return rhs != null && this.document.equals(rhs.document);
     }
 }
