@@ -16,7 +16,7 @@ public interface IntellijModuleTests
 
                 runner.test("with non-existing root", (Test test) ->
                 {
-                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     test.assertThrows(() -> IntellijModule.parse(workspaceXMLFile).await(),
                         new RootNotFoundException("/"));
@@ -24,7 +24,7 @@ public interface IntellijModuleTests
 
                 runner.test("with non-existing file", (Test test) ->
                 {
-                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
                     fileSystem.createRoot("/").await();
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     test.assertThrows(() -> IntellijModule.parse(workspaceXMLFile).await(),
@@ -33,7 +33,7 @@ public interface IntellijModuleTests
 
                 runner.test("with empty file", (Test test) ->
                 {
-                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
                     fileSystem.createRoot("/").await();
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     workspaceXMLFile.create().await();
@@ -43,7 +43,7 @@ public interface IntellijModuleTests
 
                 runner.test("with non-XML file", (Test test) ->
                 {
-                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
                     fileSystem.createRoot("/").await();
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     workspaceXMLFile.setContentsAsString("hello there").await();
@@ -53,7 +53,7 @@ public interface IntellijModuleTests
 
                 runner.test("with non-matching XML file", (Test test) ->
                 {
-                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
                     fileSystem.createRoot("/").await();
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     workspaceXMLFile.setContentsAsString("<a/>").await();
@@ -63,7 +63,7 @@ public interface IntellijModuleTests
 
                 runner.test("with matching XML file", (Test test) ->
                 {
-                    final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+                    final InMemoryFileSystem fileSystem = InMemoryFileSystem.create(test.getClock());
                     fileSystem.createRoot("/").await();
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     workspaceXMLFile.setContentsAsString("<module/>").await();
