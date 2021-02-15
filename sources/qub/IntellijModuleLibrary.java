@@ -1,6 +1,6 @@
 package qub;
 
-public class IntellijModuleLibrary
+public class IntellijModuleLibrary extends XMLElementWrapperBase
 {
     private static final String typeAttributeName = "type";
     public static final String typeAttributeValue = "module-library";
@@ -11,15 +11,14 @@ public class IntellijModuleLibrary
     private static final String javadocElementName = "JAVADOC";
     private static final String sourcesElementName = "SOURCES";
 
-    private final XMLElement orderEntryElement;
-
-    private IntellijModuleLibrary(XMLElement orderEntryElement)
+    private IntellijModuleLibrary(XMLElement xml)
     {
-        PreCondition.assertNotNull(orderEntryElement, "orderEntryElement");
-        PreCondition.assertEqual(IntellijModule.orderEntryElementName, orderEntryElement.getName(), "orderEntryElement.getName()");
-        PreCondition.assertEqual(IntellijModuleLibrary.typeAttributeValue, orderEntryElement.getAttributeValue(IntellijModuleLibrary.typeAttributeName).catchError().await(), "orderEntryElement.getAttributeValue(IntellijModuleLibrary.typeAttributeName).await()");
+        super(xml);
 
-        this.orderEntryElement = orderEntryElement;
+        PreCondition.assertNotNull(xml, "xml");
+        PreCondition.assertEqual(IntellijModule.orderEntryElementName, xml.getName(), "xml.getName()");
+        PreCondition.assertEqual(IntellijModuleLibrary.typeAttributeValue, xml.getAttributeValue(IntellijModuleLibrary.typeAttributeName).catchError().await(), "xml.getAttributeValue(IntellijModuleLibrary.typeAttributeName).await()");
+
         this.getOrCreateClassesElement();
         this.getOrCreateJavadocElement();
         this.getOrCreateSourcesElement();
@@ -31,9 +30,9 @@ public class IntellijModuleLibrary
             .setAttribute(IntellijModuleLibrary.typeAttributeName, IntellijModuleLibrary.typeAttributeValue));
     }
 
-    public static IntellijModuleLibrary create(XMLElement orderEntryElement)
+    public static IntellijModuleLibrary create(XMLElement xml)
     {
-        return new IntellijModuleLibrary(orderEntryElement);
+        return new IntellijModuleLibrary(xml);
     }
 
     private static XMLElement getOrCreateElement(XMLElement parentElement, String childElementName, Action1<XMLElement> setupChildElement)
@@ -65,7 +64,7 @@ public class IntellijModuleLibrary
 
     private XMLElement getOrCreateLibraryElement()
     {
-        return IntellijModuleLibrary.getOrCreateElement(this.orderEntryElement, IntellijModuleLibrary.libraryElementName);
+        return IntellijModuleLibrary.getOrCreateElement(this.toXml(), IntellijModuleLibrary.libraryElementName);
     }
 
     private XMLElement getOrCreateClassesElement()
@@ -137,35 +136,5 @@ public class IntellijModuleLibrary
             .setSplit(false);
 
         return this;
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof IntellijModuleLibrary && this.equals((IntellijModuleLibrary)rhs);
-    }
-
-    public boolean equals(IntellijModuleLibrary rhs)
-    {
-        return rhs != null &&
-            this.orderEntryElement.equals(rhs.orderEntryElement);
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(XMLFormat.consise);
-    }
-
-    public String toString(XMLFormat format)
-    {
-        PreCondition.assertNotNull(format, "format");
-
-        return this.toXML().toString(format);
-    }
-
-    public XMLElement toXML()
-    {
-        return this.orderEntryElement;
     }
 }

@@ -3,7 +3,7 @@ package qub;
 /**
  * An IntelliJ module (typically parsed from a .iml file).
  */
-public class IntellijModule
+public class IntellijModule extends XMLDocumentWrapperBase
 {
     private static final String moduleElementName = "module";
     private static final String moduleTypeAttributeName = "type";
@@ -30,15 +30,12 @@ public class IntellijModule
     private static final String sourceFolderAttributeValue = "sourceFolder";
     private static final String orderEntryForTestsAttributeName = "forTests";
 
-    private final XMLDocument document;
-
-    private IntellijModule(XMLDocument document)
+    private IntellijModule(XMLDocument xml)
     {
-        PreCondition.assertNotNull(document, "document");
-        PreCondition.assertNotNull(document.getRoot(), "document.getRoot()");
-        PreCondition.assertEqual(IntellijModule.moduleElementName, document.getRoot().getName(), "document.getRoot().getName()");
+        super(xml);
 
-        this.document = document;
+        PreCondition.assertNotNull(xml.getRoot(), "xml.getRoot()");
+        PreCondition.assertEqual(IntellijModule.moduleElementName, xml.getRoot().getName(), "xml.getRoot().getName()");
     }
 
     public static IntellijModule create()
@@ -58,9 +55,9 @@ public class IntellijModule
         return result;
     }
 
-    public static IntellijModule create(XMLDocument document)
+    public static IntellijModule create(XMLDocument xml)
     {
-        return new IntellijModule(document);
+        return new IntellijModule(xml);
     }
 
     public static Result<IntellijModule> parse(File file)
@@ -81,7 +78,7 @@ public class IntellijModule
 
     private XMLElement getOrCreateComponentElement()
     {
-        return this.document.getRoot()
+        return this.toXml().getRoot()
             .getFirstOrCreateElementChild(
                 IntellijModule.componentElementName,
                 () -> XMLElement.create(IntellijModule.componentElementName)
@@ -137,7 +134,7 @@ public class IntellijModule
                 () -> XMLElement.create(IntellijModule.contentElementName)
                     .setAttribute(IntellijModule.contentUrlAttributeName, IntellijModule.contentUrlAttributeValue));
 
-        contentElement.addChild(sourceFolder.toXML());
+        contentElement.addChild(sourceFolder.toXml());
 
         return this;
     }
@@ -197,7 +194,7 @@ public class IntellijModule
         PreCondition.assertNotNull(moduleLibrary, "moduleLibrary");
 
         this.getOrCreateComponentElement()
-            .addChild(moduleLibrary.toXML());
+            .addChild(moduleLibrary.toXml());
 
         return this;
     }
@@ -219,39 +216,6 @@ public class IntellijModule
         PreCondition.assertNotNull(moduleLibrary, "moduleLibrary");
 
         return this.getOrCreateComponentElement()
-            .removeChild(moduleLibrary.toXML());
-    }
-
-    /**
-     * Get the XML representation of this object.
-     * @return The XML representation of this object.
-     */
-    public XMLDocument toXML()
-    {
-        return this.document;
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(XMLFormat.consise);
-    }
-
-    public String toString(XMLFormat format)
-    {
-        PreCondition.assertNotNull(format, "format");
-
-        return this.toXML().toString(format);
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof IntellijModule && this.equals((IntellijModule)rhs);
-    }
-
-    public boolean equals(IntellijModule rhs)
-    {
-        return rhs != null && this.document.equals(rhs.document);
+            .removeChild(moduleLibrary.toXml());
     }
 }

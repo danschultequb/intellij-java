@@ -38,7 +38,7 @@ public interface IntellijModuleTests
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     workspaceXMLFile.create().await();
                     test.assertThrows(() -> IntellijModule.parse(workspaceXMLFile).await(),
-                        new PreConditionFailure("document.getRoot() cannot be null."));
+                        new PreConditionFailure("xml.getRoot() cannot be null."));
                 });
 
                 runner.test("with non-XML file", (Test test) ->
@@ -58,7 +58,7 @@ public interface IntellijModuleTests
                     final File workspaceXMLFile = fileSystem.getFile("/workspace.xml").await();
                     workspaceXMLFile.setContentsAsString("<a/>").await();
                     test.assertThrows(() -> IntellijModule.parse(workspaceXMLFile).await(),
-                        new PreConditionFailure("document.getRoot().getName() (a) must be module."));
+                        new PreConditionFailure("xml.getRoot().getName() (a) must be module."));
                 });
 
                 runner.test("with matching XML file", (Test test) ->
@@ -84,9 +84,9 @@ public interface IntellijModuleTests
                 };
 
                 parseErrorTest.run(null, new PreConditionFailure("text cannot be null."));
-                parseErrorTest.run("", new PreConditionFailure("document.getRoot() cannot be null."));
+                parseErrorTest.run("", new PreConditionFailure("xml.getRoot() cannot be null."));
                 parseErrorTest.run("hello there", new ParseException("Expected only whitespace and elements at the root of the document."));
-                parseErrorTest.run("<a/>", new PreConditionFailure("document.getRoot().getName() (a) must be module."));
+                parseErrorTest.run("<a/>", new PreConditionFailure("xml.getRoot().getName() (a) must be module."));
 
                 final Action2<String,IntellijModule> parseTest = (String text, IntellijModule expected) ->
                 {
@@ -304,17 +304,17 @@ public interface IntellijModuleTests
                                         .setAttribute("url", "there")))))));
             });
 
-            runner.testGroup("toXML()", () ->
+            runner.testGroup("toXml()", () ->
             {
-                final Action2<IntellijModule,XMLDocument> toXMLTest = (IntellijModule module, XMLDocument expected) ->
+                final Action2<IntellijModule,XMLDocument> toXmlTest = (IntellijModule module, XMLDocument expected) ->
                 {
                     runner.test("with " + module, (Test test) ->
                     {
-                        test.assertEqual(expected, module.toXML());
+                        test.assertEqual(expected, module.toXml());
                     });
                 };
 
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create(),
                     XMLDocument.create()
                         .setDeclaration(XMLDeclaration.create()
@@ -326,7 +326,7 @@ public interface IntellijModuleTests
                             .addChild(XMLElement.create("component")
                                 .setAttribute("name", "NewModuleRootManager"))));
 
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .setInheritedJdk(true),
                     XMLDocument.create()
@@ -341,7 +341,7 @@ public interface IntellijModuleTests
                                 .addChild(XMLElement.create("orderEntry")
                                     .setAttribute("type", "inheritedJdk")))));
 
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .setSourceFolderForTests(false),
                     XMLDocument.create()
@@ -357,7 +357,7 @@ public interface IntellijModuleTests
                                     .setAttribute("type", "sourceFolder")
                                     .setAttribute("forTests", "false")))));
 
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .setSourceFolderForTests(true),
                     XMLDocument.create()
@@ -373,7 +373,7 @@ public interface IntellijModuleTests
                                     .setAttribute("type", "sourceFolder")
                                     .setAttribute("forTests", "true")))));
 
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .setOutputUrl("file://$MODULE_DIR$/outputs"),
                     XMLDocument.create()
@@ -387,7 +387,7 @@ public interface IntellijModuleTests
                                 .setAttribute("name", "NewModuleRootManager")
                                 .addChild(XMLElement.create("output")
                                     .setAttribute("url", "file://$MODULE_DIR$/outputs")))));
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .setOutputTestUrl("file://$MODULE_DIR$/outputs"),
                     XMLDocument.create()
@@ -401,7 +401,7 @@ public interface IntellijModuleTests
                                 .setAttribute("name", "NewModuleRootManager")
                                 .addChild(XMLElement.create("output-test")
                                     .setAttribute("url", "file://$MODULE_DIR$/outputs")))));
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .setExcludeOutput(true),
                     XMLDocument.create()
@@ -414,7 +414,7 @@ public interface IntellijModuleTests
                             .addChild(XMLElement.create("component")
                                 .setAttribute("name", "NewModuleRootManager")
                                 .addChild(XMLElement.create("exclude-output")))));
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .addSourceFolder(IntellijSourceFolder.create("file://$MODULE_DIR$/sources")
                             .setIsTestSource(false))
@@ -437,7 +437,7 @@ public interface IntellijModuleTests
                                     .addChild(XMLElement.create("sourceFolder")
                                         .setAttribute("url", "file://$MODULE_DIR$/tests")
                                         .setAttribute("isTestSource", "true"))))));
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .addModuleLibrary(IntellijModuleLibrary.create()),
                     XMLDocument.create()
@@ -455,7 +455,7 @@ public interface IntellijModuleTests
                                         .addChild(XMLElement.create("CLASSES"))
                                         .addChild(XMLElement.create("JAVADOC"))
                                         .addChild(XMLElement.create("SOURCES")))))));
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .addModuleLibrary(IntellijModuleLibrary.create()
                             .addClassesUrl("jar://C:/qub/qub/qub-java/164/qub-java.jar!/")),
@@ -477,7 +477,7 @@ public interface IntellijModuleTests
                                         .addChild(XMLElement.create("JAVADOC"))
                                         .addChild(XMLElement.create("SOURCES")))))));
 
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .addModuleLibrary(IntellijModuleLibrary.create()
                             .addClassesUrl("jar://C:/qub/qub/qub-java/164/qub-java.jar!/")
@@ -501,7 +501,7 @@ public interface IntellijModuleTests
                                                 .setAttribute("url", "jar://C:/qub/qub/qub-java/165/qub-java.jar!/")))
                                         .addChild(XMLElement.create("JAVADOC"))
                                         .addChild(XMLElement.create("SOURCES")))))));
-                toXMLTest.run(
+                toXmlTest.run(
                     IntellijModule.create()
                         .addModuleLibrary(IntellijModuleLibrary.create()
                             .addSourcesUrl("jar://C:/qub/qub/qub-java/164/qub-java.sources.jar!/")),

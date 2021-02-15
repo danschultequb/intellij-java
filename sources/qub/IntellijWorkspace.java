@@ -3,7 +3,7 @@ package qub;
 /**
  * A convenience type for working with Intellij workspace.xml documents.
  */
-public class IntellijWorkspace
+public class IntellijWorkspace extends XMLDocumentWrapperBase
 {
     private final static String projectElementName = "project";
     private final static String projectVersionAttributeName = "version";
@@ -11,15 +11,12 @@ public class IntellijWorkspace
     private final static String componentNameAttributeName = "name";
     private final static String runManagerAttributeValue = "RunManager";
 
-    private final XMLDocument document;
-
-    private IntellijWorkspace(XMLDocument document)
+    private IntellijWorkspace(XMLDocument xml)
     {
-        PreCondition.assertNotNull(document, "document");
-        PreCondition.assertNotNull(document.getRoot(), "document.getRoot()");
-        PreCondition.assertEqual(IntellijWorkspace.projectElementName, document.getRoot().getName(), "document.getRoot().getName()");
+        super(xml);
 
-        this.document = document;
+        PreCondition.assertNotNull(xml.getRoot(), "xml.getRoot()");
+        PreCondition.assertEqual(IntellijWorkspace.projectElementName, xml.getRoot().getName(), "xml.getRoot().getName()");
     }
 
     public static IntellijWorkspace create()
@@ -40,7 +37,7 @@ public class IntellijWorkspace
      */
     private XMLElement getProjectElement()
     {
-        return this.document.getRoot();
+        return this.toXml().getRoot();
     }
 
     /**
@@ -94,34 +91,5 @@ public class IntellijWorkspace
 
         return this.getOrCreateRunManagerComponentElement()
             .removeChild(runConfiguration.toXml());
-    }
-
-    public XMLDocument toXml()
-    {
-        return this.document;
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(XMLFormat.consise);
-    }
-
-    public String toString(XMLFormat format)
-    {
-        PreCondition.assertNotNull(format, "format");
-
-        return this.document.toString(format);
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof IntellijWorkspace && this.equals((IntellijWorkspace)rhs);
-    }
-
-    public boolean equals(IntellijWorkspace rhs)
-    {
-        return rhs != null && this.document.equals(rhs.document);
     }
 }

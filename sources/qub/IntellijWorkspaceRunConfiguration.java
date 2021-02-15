@@ -3,7 +3,7 @@ package qub;
 /**
  * A convenience type for working with Intellij workspace.xml run configurations.
  */
-public class IntellijWorkspaceRunConfiguration
+public class IntellijWorkspaceRunConfiguration extends XMLElementWrapperBase
 {
     public final static String configurationElementName = "configuration";
     private final static String configurationNameAttributeName = "name";
@@ -22,14 +22,11 @@ public class IntellijWorkspaceRunConfiguration
     private final static String methodVAttributeValue = "2";
     private final static String optionEnabledAttributeName = "enabled";
 
-    private final XMLElement xmlElement;
-
-    private IntellijWorkspaceRunConfiguration(XMLElement xmlElement)
+    private IntellijWorkspaceRunConfiguration(XMLElement xml)
     {
-        PreCondition.assertNotNull(xmlElement, "xmlElement");
-        PreCondition.assertEqual(IntellijWorkspaceRunConfiguration.configurationElementName, xmlElement.getName(), "xmlElement.getName()");
+        super(xml);
 
-        this.xmlElement = xmlElement;
+        PreCondition.assertEqual(IntellijWorkspaceRunConfiguration.configurationElementName, xml.getName(), "xml.getName()");
     }
 
     public static IntellijWorkspaceRunConfiguration create()
@@ -56,7 +53,7 @@ public class IntellijWorkspaceRunConfiguration
      */
     public String getName()
     {
-        return this.xmlElement.getAttributeValue(IntellijWorkspaceRunConfiguration.configurationNameAttributeName)
+        return this.toXml().getAttributeValue(IntellijWorkspaceRunConfiguration.configurationNameAttributeName)
             .catchError(NotFoundException.class)
             .await();
     }
@@ -70,7 +67,7 @@ public class IntellijWorkspaceRunConfiguration
     {
         PreCondition.assertNotNullAndNotEmpty(name, "name");
 
-        this.xmlElement.setAttribute(IntellijWorkspaceRunConfiguration.configurationNameAttributeName, name);
+        this.toXml().setAttribute(IntellijWorkspaceRunConfiguration.configurationNameAttributeName, name);
 
         return this;
     }
@@ -81,7 +78,7 @@ public class IntellijWorkspaceRunConfiguration
      */
     public String getType()
     {
-        return this.xmlElement.getAttributeValue(IntellijWorkspaceRunConfiguration.configurationTypeAttributeName)
+        return this.toXml().getAttributeValue(IntellijWorkspaceRunConfiguration.configurationTypeAttributeName)
             .catchError(NotFoundException.class)
             .await();
     }
@@ -95,7 +92,7 @@ public class IntellijWorkspaceRunConfiguration
     {
         PreCondition.assertNotNullAndNotEmpty(type, "type");
 
-        this.xmlElement.setAttribute(IntellijWorkspaceRunConfiguration.configurationTypeAttributeName, type);
+        this.toXml().setAttribute(IntellijWorkspaceRunConfiguration.configurationTypeAttributeName, type);
 
         return this;
     }
@@ -106,7 +103,7 @@ public class IntellijWorkspaceRunConfiguration
      */
     public String getFactoryName()
     {
-        return this.xmlElement.getAttributeValue(IntellijWorkspaceRunConfiguration.configurationFactoryNameAttributeName)
+        return this.toXml().getAttributeValue(IntellijWorkspaceRunConfiguration.configurationFactoryNameAttributeName)
             .catchError(NotFoundException.class)
             .await();
     }
@@ -120,14 +117,14 @@ public class IntellijWorkspaceRunConfiguration
     {
         PreCondition.assertNotNullAndNotEmpty(factoryName, "factoryName");
 
-        this.xmlElement.setAttribute(IntellijWorkspaceRunConfiguration.configurationFactoryNameAttributeName, factoryName);
+        this.toXml().setAttribute(IntellijWorkspaceRunConfiguration.configurationFactoryNameAttributeName, factoryName);
 
         return this;
     }
 
     private XMLElement getOptionElementChild(String attributeName, String attributeValue)
     {
-        return this.xmlElement.getFirstElementChild(
+        return this.toXml().getFirstElementChild(
             (XMLElement childElement) -> Comparer.equal(childElement.getName(), IntellijWorkspaceRunConfiguration.optionElementName) &&
                                          Comparer.equal(childElement.getAttributeValue(attributeName).catchError().await(), attributeValue))
             .catchError(NotFoundException.class)
@@ -136,7 +133,7 @@ public class IntellijWorkspaceRunConfiguration
 
     private XMLElement getOrCreateOptionElementChild(String attributeName, String attributeValue)
     {
-        return this.xmlElement.getFirstOrCreateElementChild(
+        return this.toXml().getFirstOrCreateElementChild(
             (XMLElement childElement) -> Comparer.equal(childElement.getName(), IntellijWorkspaceRunConfiguration.optionElementName) &&
                                          Comparer.equal(childElement.getAttributeValue(attributeName).catchError().await(), attributeValue),
             () -> XMLElement.create(IntellijWorkspaceRunConfiguration.optionElementName)
@@ -180,7 +177,7 @@ public class IntellijWorkspaceRunConfiguration
      */
     public String getModuleName()
     {
-        return this.xmlElement.getFirstElementChild(IntellijWorkspaceRunConfiguration.moduleElementName)
+        return this.toXml().getFirstElementChild(IntellijWorkspaceRunConfiguration.moduleElementName)
             .then((XMLElement moduleElement) -> moduleElement.getAttributeValue(IntellijWorkspaceRunConfiguration.optionNameAttributeName).await())
             .catchError(NotFoundException.class)
             .await();
@@ -195,7 +192,7 @@ public class IntellijWorkspaceRunConfiguration
     {
         PreCondition.assertNotNullAndNotEmpty(moduleName, "moduleName");
 
-        this.xmlElement.getFirstOrCreateElementChild(IntellijWorkspaceRunConfiguration.moduleElementName)
+        this.toXml().getFirstOrCreateElementChild(IntellijWorkspaceRunConfiguration.moduleElementName)
             .setAttribute(IntellijWorkspaceRunConfiguration.optionNameAttributeName, moduleName);
 
         return this;
@@ -270,38 +267,5 @@ public class IntellijWorkspaceRunConfiguration
             .setAttribute(IntellijWorkspaceRunConfiguration.optionValueAttributeName, vmParameters);
 
         return this;
-    }
-
-    /**
-     * Get the XML representation of this run configuration.
-     * @return The XML representation of this run configuration.
-     */
-    public XMLElement toXml()
-    {
-        return this.xmlElement;
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(XMLFormat.consise);
-    }
-
-    public String toString(XMLFormat format)
-    {
-        PreCondition.assertNotNull(format, "format");
-
-        return this.xmlElement.toString(format);
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof IntellijWorkspaceRunConfiguration && this.equals((IntellijWorkspaceRunConfiguration)rhs);
-    }
-
-    public boolean equals(IntellijWorkspaceRunConfiguration rhs)
-    {
-        return rhs != null && this.xmlElement.equals(rhs.xmlElement);
     }
 }

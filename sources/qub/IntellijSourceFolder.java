@@ -1,18 +1,14 @@
 package qub;
 
-public class IntellijSourceFolder
+public class IntellijSourceFolder extends XMLElementWrapperBase
 {
     private static final String sourceFolderElementName = "sourceFolder";
     private static final String urlAttributeName = "url";
     private static final String isTestSourceAttributeName = "isTestSource";
 
-    private final XMLElement element;
-
-    private IntellijSourceFolder(XMLElement element)
+    private IntellijSourceFolder(XMLElement xml)
     {
-        PreCondition.assertNotNull(element, "element");
-
-        this.element = element;
+        super(xml);
     }
 
     public static IntellijSourceFolder create(String url)
@@ -23,17 +19,17 @@ public class IntellijSourceFolder
             .setUrl(url);
     }
 
-    public static IntellijSourceFolder create(XMLElement sourceFolderElement)
+    public static IntellijSourceFolder create(XMLElement xml)
     {
-        PreCondition.assertNotNull(sourceFolderElement, "sourceFolderElement");
-        PreCondition.assertEqual(IntellijSourceFolder.sourceFolderElementName, sourceFolderElement.getName(), "sourceFolderElement.getName()");
+        PreCondition.assertNotNull(xml, "xml");
+        PreCondition.assertEqual(IntellijSourceFolder.sourceFolderElementName, xml.getName(), "xml.getName()");
 
-        return new IntellijSourceFolder(sourceFolderElement);
+        return new IntellijSourceFolder(xml);
     }
 
     public String getUrl()
     {
-        return this.element.getAttributeValue(IntellijSourceFolder.urlAttributeName)
+        return this.toXml().getAttributeValue(IntellijSourceFolder.urlAttributeName)
             .catchError(NotFoundException.class)
             .await();
     }
@@ -42,13 +38,13 @@ public class IntellijSourceFolder
     {
         PreCondition.assertNotNullAndNotEmpty(url, "url");
 
-        this.element.setAttribute(IntellijSourceFolder.urlAttributeName, url);
+        this.toXml().setAttribute(IntellijSourceFolder.urlAttributeName, url);
         return this;
     }
 
     public boolean getIsTestSource()
     {
-        return this.element.getAttributeValue(IntellijSourceFolder.isTestSourceAttributeName)
+        return this.toXml().getAttributeValue(IntellijSourceFolder.isTestSourceAttributeName)
             .then((String isTestSourceAttributeValue) -> Booleans.parse(isTestSourceAttributeValue).await())
             .catchError(() -> false)
             .await();
@@ -56,35 +52,7 @@ public class IntellijSourceFolder
 
     public IntellijSourceFolder setIsTestSource(boolean isTestSource)
     {
-        this.element.setAttribute(IntellijSourceFolder.isTestSourceAttributeName, Booleans.toString(isTestSource));
+        this.toXml().setAttribute(IntellijSourceFolder.isTestSourceAttributeName, Booleans.toString(isTestSource));
         return this;
-    }
-
-    @Override
-    public boolean equals(Object rhs)
-    {
-        return rhs instanceof IntellijSourceFolder && this.equals((IntellijSourceFolder)rhs);
-    }
-
-    public boolean equals(IntellijSourceFolder rhs)
-    {
-        return rhs != null &&
-            this.element.equals(rhs.element);
-    }
-
-    @Override
-    public String toString()
-    {
-        return this.toString(XMLFormat.consise);
-    }
-
-    public String toString(XMLFormat format)
-    {
-        return this.toXML().toString(format);
-    }
-
-    public XMLElement toXML()
-    {
-        return this.element;
     }
 }

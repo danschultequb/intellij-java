@@ -28,7 +28,7 @@ public interface IntellijSourceFolderTests
                     test.assertFalse(sourceFolder.getIsTestSource());
                     test.assertEqual(
                         XMLElement.create("sourceFolder").setAttribute("url", "hello"),
-                        sourceFolder.toXML());
+                        sourceFolder.toXml());
                 });
             });
 
@@ -37,13 +37,13 @@ public interface IntellijSourceFolderTests
                 runner.test("with null", (Test test) ->
                 {
                     test.assertThrows(() -> IntellijSourceFolder.create((XMLElement)null),
-                        new PreConditionFailure("sourceFolderElement cannot be null."));
+                        new PreConditionFailure("xml cannot be null."));
                 });
 
                 runner.test("with non-sourceFolder element", (Test test) ->
                 {
                     test.assertThrows(() -> IntellijSourceFolder.create(XMLElement.create("hello")),
-                        new PreConditionFailure("sourceFolderElement.getName() (hello) must be sourceFolder."));
+                        new PreConditionFailure("xml.getName() (hello) must be sourceFolder."));
                 });
 
                 runner.test("with empty sourceFolder element", (Test test) ->
@@ -54,7 +54,7 @@ public interface IntellijSourceFolderTests
                     test.assertFalse(sourceFolder.getIsTestSource());
                     test.assertEqual(
                         XMLElement.create("sourceFolder"),
-                        sourceFolder.toXML());
+                        sourceFolder.toXml());
                 });
 
                 runner.test("with expected attributes", (Test test) ->
@@ -69,7 +69,7 @@ public interface IntellijSourceFolderTests
                         XMLElement.create("sourceFolder")
                             .setAttribute("url", "hello")
                             .setAttribute("isTestSource", "true"),
-                        sourceFolder.toXML());
+                        sourceFolder.toXml());
                 });
                 runner.test("with extra attributes", (Test test) ->
                 {
@@ -85,7 +85,7 @@ public interface IntellijSourceFolderTests
                             .setAttribute("url", "there")
                             .setAttribute("isTestSource", "false")
                             .setAttribute("name", "foo"),
-                        sourceFolder.toXML());
+                        sourceFolder.toXml());
                 });
             });
 

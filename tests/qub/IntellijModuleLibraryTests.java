@@ -15,7 +15,7 @@ public interface IntellijModuleLibraryTests
                             .addChild(XMLElement.create("CLASSES"))
                             .addChild(XMLElement.create("JAVADOC"))
                             .addChild(XMLElement.create("SOURCES"))),
-                    moduleLibrary.toXML());
+                    moduleLibrary.toXml());
             });
 
             runner.testGroup("create(XMLElement)", () ->
@@ -23,19 +23,19 @@ public interface IntellijModuleLibraryTests
                 runner.test("with null", (Test test) ->
                 {
                     test.assertThrows(() -> IntellijModuleLibrary.create(null),
-                        new PreConditionFailure("orderEntryElement cannot be null."));
+                        new PreConditionFailure("xml cannot be null."));
                 });
 
                 runner.test("with non-orderEntry element", (Test test) ->
                 {
                     test.assertThrows(() -> IntellijModuleLibrary.create(XMLElement.create("hello")),
-                        new PreConditionFailure("orderEntryElement.getName() (hello) must be orderEntry."));
+                        new PreConditionFailure("xml.getName() (hello) must be orderEntry."));
                 });
 
                 runner.test("with no type attribute", (Test test) ->
                 {
                     test.assertThrows(() -> IntellijModuleLibrary.create(XMLElement.create("orderEntry")),
-                        new PreConditionFailure("orderEntryElement.getAttributeValue(IntellijModuleLibrary.typeAttributeName).await() (null) must be module-library."));
+                        new PreConditionFailure("xml.getAttributeValue(IntellijModuleLibrary.typeAttributeName).await() (null) must be module-library."));
                 });
 
                 runner.test("with non-module-library type attribute", (Test test) ->
@@ -43,7 +43,7 @@ public interface IntellijModuleLibraryTests
                     test.assertThrows(() -> IntellijModuleLibrary.create(
                         XMLElement.create("orderEntry")
                             .setAttribute("type", "chocolate")),
-                        new PreConditionFailure("orderEntryElement.getAttributeValue(IntellijModuleLibrary.typeAttributeName).await() (chocolate) must be module-library."));
+                        new PreConditionFailure("xml.getAttributeValue(IntellijModuleLibrary.typeAttributeName).await() (chocolate) must be module-library."));
                 });
 
                 runner.test("with valid element", (Test test) ->
@@ -59,7 +59,7 @@ public interface IntellijModuleLibraryTests
                                 .addChild(XMLElement.create("CLASSES"))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
             });
 
@@ -77,7 +77,7 @@ public interface IntellijModuleLibraryTests
                                 .addChild(XMLElement.create("CLASSES"))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
 
                 runner.test("with empty", (Test test) ->
@@ -92,7 +92,7 @@ public interface IntellijModuleLibraryTests
                                 .addChild(XMLElement.create("CLASSES"))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
 
                 runner.test("with non-empty", (Test test) ->
@@ -109,7 +109,7 @@ public interface IntellijModuleLibraryTests
                                         .setAttribute("url", "hello")))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
             });
 
@@ -149,7 +149,7 @@ public interface IntellijModuleLibraryTests
                                 .addChild(XMLElement.create("CLASSES"))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
 
                 runner.test("with empty", (Test test) ->
@@ -164,7 +164,7 @@ public interface IntellijModuleLibraryTests
                                 .addChild(XMLElement.create("CLASSES"))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
 
                 runner.test("with non-empty", (Test test) ->
@@ -181,7 +181,7 @@ public interface IntellijModuleLibraryTests
                                         .setAttribute("url", "hello")))
                                 .addChild(XMLElement.create("JAVADOC"))
                                 .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXML());
+                        moduleLibrary.toXml());
                 });
             });
 
