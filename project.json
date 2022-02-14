@@ -1,13 +1,13 @@
 {
   "publisher": "qub",
   "project": "intellij-java",
-  "version": "17",
+  "version": "18",
   "java": {
     "dependencies": [
       {
         "publisher": "qub",
         "project": "xml-java",
-        "version": "32"
+        "version": "33"
       }
     ]
   }
