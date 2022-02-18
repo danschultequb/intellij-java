@@ -154,7 +154,7 @@ public class IntellijModule extends XMLDocumentWrapperBase
         }
         else if (!inheritedJdk && inheritedJdkElement != null)
         {
-            componentElement.removeChild(inheritedJdkElement);
+            componentElement.removeChild(inheritedJdkElement).await();
         }
 
         return this;
@@ -165,7 +165,7 @@ public class IntellijModule extends XMLDocumentWrapperBase
         final XMLElement componentElement = this.getOrCreateComponentElement();
         XMLElement sourceFolderElement = componentElement.getElementChildren((XMLElement childElement) ->
             IntellijModule.orderEntryElementName.equals(childElement.getName()) &&
-            IntellijModule.orderEntryTypeAttributeName.equals(childElement.getAttributeValue(IntellijModule.sourceFolderAttributeValue).catchError().await()))
+            IntellijModule.sourceFolderAttributeValue.equals(childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await()))
             .first();
         if (sourceFolderElement == null)
         {
@@ -183,9 +183,7 @@ public class IntellijModule extends XMLDocumentWrapperBase
         return this.getOrCreateComponentElement()
             .getElementChildren((XMLElement childElement) ->
                 childElement.getName().equals(IntellijModule.orderEntryElementName) &&
-                Comparer.equal(
-                    childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await(),
-                    IntellijModuleLibrary.typeAttributeValue))
+                IntellijModuleLibrary.typeAttributeValue.equals(childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await()))
             .map(IntellijModuleLibrary::create);
     }
 
@@ -204,9 +202,9 @@ public class IntellijModule extends XMLDocumentWrapperBase
         this.getOrCreateComponentElement()
             .removeElementChildren((XMLElement childElement) ->
                 childElement.getName().equals(IntellijModule.orderEntryElementName) &&
-                Comparer.equal(
-                    childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await(),
-                    IntellijModuleLibrary.typeAttributeValue));
+                IntellijModuleLibrary.typeAttributeValue.equals(childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await()))
+            .catchError(NotFoundException.class)
+            .await();
 
         return this;
     }

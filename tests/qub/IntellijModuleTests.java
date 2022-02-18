@@ -6,6 +6,56 @@ public interface IntellijModuleTests
     {
         runner.testGroup(IntellijModule.class, () ->
         {
+            runner.test("create()", (Test test) ->
+            {
+                final IntellijModule module = IntellijModule.create();
+                test.assertNotNull(module);
+                test.assertEqual(
+                    XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create()
+                            .setVersion("1.0")
+                            .setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component")
+                                .setAttribute("name", "NewModuleRootManager"))),
+                    module.toXml());
+            });
+
+            runner.testGroup("create(XMLDocument)", () ->
+            {
+                final Action2<XMLDocument,Throwable> createErrorTest = (XMLDocument xml, Throwable expected) ->
+                {
+                    runner.test("with " + Objects.toString(xml), (Test test) ->
+                    {
+                        test.assertThrows(() -> IntellijModule.create(xml),
+                            expected);
+                    });
+                };
+
+                createErrorTest.run(null, new PreConditionFailure("xml cannot be null."));
+                createErrorTest.run(XMLDocument.create(), new PreConditionFailure("xml.getRoot() cannot be null."));
+                createErrorTest.run(
+                    XMLDocument.create()
+                        .setRoot(XMLElement.create("spam")),
+                    new PreConditionFailure("xml.getRoot().getName() (spam) must be module."));
+
+                final Action1<XMLDocument> createTest = (XMLDocument xml) ->
+                {
+                    runner.test("with " + xml.toString(), (Test test) ->
+                    {
+                        final IntellijModule module = IntellijModule.create(xml);
+                        test.assertNotNull(module);
+                        test.assertEqual(xml, module.toXml());
+                    });
+                };
+
+                createTest.run(
+                    XMLDocument.create()
+                        .setRoot(XMLElement.create("module")));
+            });
+
             runner.testGroup("parse(File)", () ->
             {
                 runner.test("with null", (Test test) ->
@@ -302,6 +352,384 @@ public interface IntellijModuleTests
                                         .setAttribute("url", "hello"))
                                     .addChild(XMLElement.create("sourceFolder")
                                         .setAttribute("url", "there")))))));
+            });
+
+            runner.testGroup("setInheritedJdk(boolean)", () ->
+            {
+                final Action3<IntellijModule,Boolean,IntellijModule> setInheritedJdkTest = (IntellijModule module, Boolean inheritedJdk, IntellijModule expected) ->
+                {
+                    runner.test("with " + English.andList(module, inheritedJdk), (Test test) ->
+                    {
+                        final IntellijModule setInheritedJdkResult = module.setInheritedJdk(inheritedJdk);
+                        test.assertSame(module, setInheritedJdkResult);
+                        test.assertEqual(expected, module);
+                    });
+                };
+
+                setInheritedJdkTest.run(
+                    IntellijModule.create(),
+                    false,
+                    IntellijModule.create());
+                setInheritedJdkTest.run(
+                    IntellijModule.create(),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component")
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "inheritedJdk"))))));
+                setInheritedJdkTest.run(
+                    IntellijModule.create().setInheritedJdk(true),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component")
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "inheritedJdk"))))));
+                setInheritedJdkTest.run(
+                    IntellijModule.create().setInheritedJdk(true),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")))));
+                setInheritedJdkTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))))),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))))));
+                setInheritedJdkTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))))),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "inheritedJdk"))))));
+                setInheritedJdkTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))))),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))))));
+                setInheritedJdkTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))))),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "inheritedJdk"))))));
+            });
+
+            runner.testGroup("setSourceFolderForTests(boolean)", () ->
+            {
+                final Action3<IntellijModule,Boolean,IntellijModule> setSourceFolderForTestsTest = (IntellijModule module, Boolean sourceFolderForTests, IntellijModule expected) ->
+                {
+                    runner.test("with " + English.andList(module, sourceFolderForTests), (Test test) ->
+                    {
+                        final IntellijModule setSourceFolderForTestsResult = module.setSourceFolderForTests(sourceFolderForTests);
+                        test.assertSame(module, setSourceFolderForTestsResult);
+                        test.assertEqual(expected, module);
+                    });
+                };
+
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create(),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component")
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "false"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create(),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component")
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "true"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create().setSourceFolderForTests(true),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component")
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "true"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create().setSourceFolderForTests(true),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "false"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))))),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "false"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))))),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("notOrderEntry").setAttribute("type", "inheritedJdk"))
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "true"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))))),
+                    false,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "false"))))));
+                setSourceFolderForTestsTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))))),
+                    true,
+                    IntellijModule.create(XMLDocument.create()
+                        .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                        .setRoot(XMLElement.create("module")
+                            .setAttribute("type", "JAVA_MODULE")
+                            .setAttribute("version", "4")
+                            .addChild(XMLElement.create("component", true)
+                                .setAttribute("name", "NewModuleRootManager")
+                                .addChild(XMLElement.create("orderEntry").setAttribute("notType", "spam"))
+                                .addChild(XMLElement.create("orderEntry").setAttribute("type", "sourceFolder").setAttribute("forTests", "true"))))));
+            });
+
+            runner.testGroup("getModuleLibraries()", () ->
+            {
+                final Action2<IntellijModule,Iterable<IntellijModuleLibrary>> getModuleLibrariesTest = (IntellijModule module, Iterable<IntellijModuleLibrary> expected) ->
+                {
+                    runner.test("with " + module.toString(), (Test test) ->
+                    {
+                        test.assertEqual(expected, module.getModuleLibraries());
+                    });
+                };
+
+                getModuleLibrariesTest.run(
+                    IntellijModule.create(),
+                    Iterable.create());
+                getModuleLibrariesTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setRoot(XMLElement.create("module")
+                            .addChild(XMLElement.create("component")
+                                .addChild(XMLElement.create("notOrderEntry"))))),
+                    Iterable.create());
+                getModuleLibrariesTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setRoot(XMLElement.create("module")
+                            .addChild(XMLElement.create("component")
+                                .addChild(XMLElement.create("orderEntry")
+                                    .setAttribute("notType", "module-library"))))),
+                    Iterable.create());
+                getModuleLibrariesTest.run(
+                    IntellijModule.create(XMLDocument.create()
+                        .setRoot(XMLElement.create("module")
+                            .addChild(XMLElement.create("component")
+                                .addChild(XMLElement.create("orderEntry")
+                                    .setAttribute("type", "not-module-library"))))),
+                    Iterable.create());
+                getModuleLibrariesTest.run(
+                    IntellijModule.create()
+                        .addModuleLibrary(IntellijModuleLibrary.create()),
+                    Iterable.create(IntellijModuleLibrary.create()));
+                getModuleLibrariesTest.run(
+                    IntellijModule.create()
+                        .addModuleLibrary(IntellijModuleLibrary.create(XMLElement.create("orderEntry").setAttribute("type", "module-library").setAttribute("a", "b"))),
+                    Iterable.create(IntellijModuleLibrary.create(XMLElement.create("orderEntry").setAttribute("type", "module-library").setAttribute("a", "b"))));
+                getModuleLibrariesTest.run(
+                    IntellijModule.create()
+                        .addModuleLibrary(IntellijModuleLibrary.create()
+                            .addSourcesUrl("sources-url-1"))
+                        .addModuleLibrary(IntellijModuleLibrary.create()
+                            .addSourcesUrl("sources-url-2")),
+                    Iterable.create(
+                        IntellijModuleLibrary.create().addSourcesUrl("sources-url-1"),
+                        IntellijModuleLibrary.create().addSourcesUrl("sources-url-2")));
+            });
+
+            runner.testGroup("addModuleLibrary(IntellijModuleLibrary)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final IntellijModule module = IntellijModule.create();
+                    test.assertThrows(() -> module.addModuleLibrary(null),
+                        new PreConditionFailure("moduleLibrary cannot be null."));
+                    test.assertEqual(
+                        XMLDocument.create()
+                            .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                            .setRoot(XMLElement.create("module").setAttribute("type", "JAVA_MODULE").setAttribute("version", "4")
+                                .addChild(XMLElement.create("component").setAttribute("name", "NewModuleRootManager"))),
+                        module.toXml());
+                });
+
+                runner.test("with non-null", (Test test) ->
+                {
+                    final IntellijModule module = IntellijModule.create();
+                    final IntellijModule addModuleLibraryResult = module.addModuleLibrary(IntellijModuleLibrary.create());
+                    test.assertSame(module, addModuleLibraryResult);
+                    test.assertEqual(
+                        XMLDocument.create()
+                            .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                            .setRoot(XMLElement.create("module").setAttribute("type", "JAVA_MODULE").setAttribute("version", "4")
+                                .addChild(XMLElement.create("component").setAttribute("name", "NewModuleRootManager")
+                                    .addChild(XMLElement.create("orderEntry").setAttribute("type", "module-library")
+                                        .addChild(XMLElement.create("library")
+                                            .addChild(XMLElement.create("CLASSES"))
+                                            .addChild(XMLElement.create("JAVADOC"))
+                                            .addChild(XMLElement.create("SOURCES")))))),
+                        module.toXml());
+                });
+            });
+
+            runner.testGroup("clearModuleLibraries()", () ->
+            {
+                final Action2<IntellijModule,IntellijModule> clearModuleLibrariesTest = (IntellijModule module, IntellijModule expected) ->
+                {
+                    runner.test("with " + module.toString(), (Test test) ->
+                    {
+                        final IntellijModule clearModuleLibrariesResult = module.clearModuleLibraries();
+                        test.assertSame(module, clearModuleLibrariesResult);
+                        test.assertEqual(expected, module);
+                    });
+                };
+
+                clearModuleLibrariesTest.run(
+                    IntellijModule.create(),
+                    IntellijModule.create());
+                clearModuleLibrariesTest.run(
+                    IntellijModule.create()
+                        .addModuleLibrary(IntellijModuleLibrary.create()),
+                    IntellijModule.create(
+                        XMLDocument.create()
+                            .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                            .setRoot(XMLElement.create("module").setAttribute("type", "JAVA_MODULE").setAttribute("version", "4")
+                                .addChild(XMLElement.create("component", true).setAttribute("name", "NewModuleRootManager")))));
+                clearModuleLibrariesTest.run(
+                    IntellijModule.create()
+                        .addModuleLibrary(IntellijModuleLibrary.create())
+                        .addModuleLibrary(IntellijModuleLibrary.create()),
+                    IntellijModule.create(
+                        XMLDocument.create()
+                            .setDeclaration(XMLDeclaration.create().setVersion("1.0").setEncoding("UTF-8"))
+                            .setRoot(XMLElement.create("module").setAttribute("type", "JAVA_MODULE").setAttribute("version", "4")
+                                .addChild(XMLElement.create("component", true).setAttribute("name", "NewModuleRootManager")))));
             });
 
             runner.testGroup("toXml()", () ->

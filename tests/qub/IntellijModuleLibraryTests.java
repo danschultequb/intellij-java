@@ -63,54 +63,97 @@ public interface IntellijModuleLibraryTests
                 });
             });
 
+            runner.testGroup("getClassesUrls(XMLElement,Iterable<String>)", () ->
+            {
+                final Action2<XMLElement,Iterable<String>> getClassesUrlsTest = (XMLElement xml, Iterable<String> expected) ->
+                {
+                    runner.test("with " + xml.toString(), (Test test) ->
+                    {
+                        final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create(xml);
+                        test.assertEqual(expected, moduleLibrary.getClassesUrls());
+                    });
+                };
+
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library"),
+                    Iterable.create());
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")),
+                    Iterable.create());
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("CLASSES"))),
+                    Iterable.create());
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("CLASSES")
+                                .addChild(XMLElement.create("root")))),
+                    Iterable.create());
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("CLASSES")
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "")))),
+                    Iterable.create());
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("CLASSES")
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "a")))),
+                    Iterable.create("a"));
+                getClassesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("CLASSES")
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "a"))
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "b")))),
+                    Iterable.create("a", "b"));
+            });
+
             runner.testGroup("addClassesUrl(String)", () ->
             {
-                runner.test("with null", (Test test) ->
+                final Action2<String,Throwable> addClassesUrlErrorTest = (String classesUrl, Throwable expected) ->
                 {
-                    final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
-                    test.assertThrows(() -> moduleLibrary.addClassesUrl(null),
-                        new PreConditionFailure("classesUrl cannot be null."));
-                    test.assertEqual(
-                        XMLElement.create("orderEntry")
-                            .setAttribute("type", "module-library")
-                            .addChild(XMLElement.create("library")
-                                .addChild(XMLElement.create("CLASSES"))
-                                .addChild(XMLElement.create("JAVADOC"))
-                                .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXml());
-                });
+                    runner.test("with " + Strings.escapeAndQuote(classesUrl), (Test test) ->
+                    {
+                        final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
+                        test.assertThrows(() -> moduleLibrary.addClassesUrl(classesUrl),
+                            expected);
+                        test.assertEqual(Iterable.create(), moduleLibrary.getClassesUrls());
+                    });
+                };
 
-                runner.test("with empty", (Test test) ->
-                {
-                    final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
-                    test.assertThrows(() -> moduleLibrary.addClassesUrl(""),
-                        new PreConditionFailure("classesUrl cannot be empty."));
-                    test.assertEqual(
-                        XMLElement.create("orderEntry")
-                            .setAttribute("type", "module-library")
-                            .addChild(XMLElement.create("library")
-                                .addChild(XMLElement.create("CLASSES"))
-                                .addChild(XMLElement.create("JAVADOC"))
-                                .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXml());
-                });
+                addClassesUrlErrorTest.run(null, new PreConditionFailure("classesUrl cannot be null."));
+                addClassesUrlErrorTest.run("", new PreConditionFailure("classesUrl cannot be empty."));
 
-                runner.test("with non-empty", (Test test) ->
+                final Action1<String> addClassesUrlTest = (String classesUrl) ->
                 {
-                    final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
-                    final IntellijModuleLibrary addClassesUrlResult = moduleLibrary.addClassesUrl("hello");
-                    test.assertSame(moduleLibrary, addClassesUrlResult);
-                    test.assertEqual(
-                        XMLElement.create("orderEntry")
-                            .setAttribute("type", "module-library")
-                            .addChild(XMLElement.create("library")
-                                .addChild(XMLElement.create("CLASSES")
-                                    .addChild(XMLElement.create("root")
-                                        .setAttribute("url", "hello")))
-                                .addChild(XMLElement.create("JAVADOC"))
-                                .addChild(XMLElement.create("SOURCES"))),
-                        moduleLibrary.toXml());
-                });
+                    runner.test("with " + Strings.escapeAndQuote(classesUrl), (Test test) ->
+                    {
+                        final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
+                        final IntellijModuleLibrary addClassesUrlResult = moduleLibrary.addClassesUrl(classesUrl);
+                        test.assertSame(moduleLibrary, addClassesUrlResult);
+                        test.assertEqual(Iterable.create(classesUrl), moduleLibrary.getClassesUrls());
+                        test.assertEqual(Iterable.create(), moduleLibrary.getSourcesUrls());
+                    });
+                };
+
+                addClassesUrlTest.run("a");
+                addClassesUrlTest.run("jar:///qub/folder/thing");
             });
 
             runner.testGroup("clearClassesUrls()", () ->
@@ -135,13 +178,74 @@ public interface IntellijModuleLibraryTests
                         .addSourcesUrl("friend"));
             });
 
-            runner.testGroup("addClassesUrl(String)", () ->
+            runner.testGroup("getSourcesUrls(XMLElement,Iterable<String>)", () ->
+            {
+                final Action2<XMLElement,Iterable<String>> getSourcesUrlsTest = (XMLElement xml, Iterable<String> expected) ->
+                {
+                    runner.test("with " + xml.toString(), (Test test) ->
+                    {
+                        final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create(xml);
+                        test.assertEqual(expected, moduleLibrary.getSourcesUrls());
+                    });
+                };
+
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library"),
+                    Iterable.create());
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")),
+                    Iterable.create());
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("SOURCES"))),
+                    Iterable.create());
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("SOURCES")
+                                .addChild(XMLElement.create("root")))),
+                    Iterable.create());
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("SOURCES")
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "")))),
+                    Iterable.create());
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("SOURCES")
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "a")))),
+                    Iterable.create("a"));
+                getSourcesUrlsTest.run(
+                    XMLElement.create("orderEntry")
+                        .setAttribute("type", "module-library")
+                        .addChild(XMLElement.create("library")
+                            .addChild(XMLElement.create("SOURCES")
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "a"))
+                                .addChild(XMLElement.create("root")
+                                    .setAttribute("url", "b")))),
+                    Iterable.create("a", "b"));
+            });
+
+            runner.testGroup("addSourcesUrl(String)", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
                     final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
-                    test.assertThrows(() -> moduleLibrary.addClassesUrl(null),
-                        new PreConditionFailure("classesUrl cannot be null."));
+                    test.assertThrows(() -> moduleLibrary.addSourcesUrl(null),
+                        new PreConditionFailure("sourcesUrl cannot be null."));
                     test.assertEqual(
                         XMLElement.create("orderEntry")
                             .setAttribute("type", "module-library")
@@ -155,8 +259,8 @@ public interface IntellijModuleLibraryTests
                 runner.test("with empty", (Test test) ->
                 {
                     final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
-                    test.assertThrows(() -> moduleLibrary.addClassesUrl(""),
-                        new PreConditionFailure("classesUrl cannot be empty."));
+                    test.assertThrows(() -> moduleLibrary.addSourcesUrl(""),
+                        new PreConditionFailure("sourcesUrl cannot be empty."));
                     test.assertEqual(
                         XMLElement.create("orderEntry")
                             .setAttribute("type", "module-library")
@@ -170,17 +274,17 @@ public interface IntellijModuleLibraryTests
                 runner.test("with non-empty", (Test test) ->
                 {
                     final IntellijModuleLibrary moduleLibrary = IntellijModuleLibrary.create();
-                    final IntellijModuleLibrary addClassesUrlResult = moduleLibrary.addClassesUrl("hello");
-                    test.assertSame(moduleLibrary, addClassesUrlResult);
+                    final IntellijModuleLibrary addSourcesUrlResult = moduleLibrary.addSourcesUrl("hello");
+                    test.assertSame(moduleLibrary, addSourcesUrlResult);
                     test.assertEqual(
                         XMLElement.create("orderEntry")
                             .setAttribute("type", "module-library")
                             .addChild(XMLElement.create("library")
-                                .addChild(XMLElement.create("CLASSES")
-                                    .addChild(XMLElement.create("root")
-                                        .setAttribute("url", "hello")))
+                                .addChild(XMLElement.create("CLASSES"))
                                 .addChild(XMLElement.create("JAVADOC"))
-                                .addChild(XMLElement.create("SOURCES"))),
+                                .addChild(XMLElement.create("SOURCES")
+                                    .addChild(XMLElement.create("root")
+                                        .setAttribute("url", "hello")))),
                         moduleLibrary.toXml());
                 });
             });

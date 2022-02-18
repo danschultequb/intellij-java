@@ -1,7 +1,7 @@
 {
   "publisher": "qub",
   "project": "intellij-java",
-  "version": "18",
+  "version": "19",
   "java": {
     "dependencies": [
       {
