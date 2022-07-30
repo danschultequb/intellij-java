@@ -163,10 +163,12 @@ public class IntellijModule extends XMLDocumentWrapperBase
     public IntellijModule setSourceFolderForTests(boolean sourceFolderForTests)
     {
         final XMLElement componentElement = this.getOrCreateComponentElement();
-        XMLElement sourceFolderElement = componentElement.getElementChildren((XMLElement childElement) ->
+        XMLElement sourceFolderElement = componentElement.getElementChildren()
+            .first((XMLElement childElement) ->
             IntellijModule.orderEntryElementName.equals(childElement.getName()) &&
             IntellijModule.sourceFolderAttributeValue.equals(childElement.getAttributeValue(IntellijModule.orderEntryTypeAttributeName).catchError().await()))
-            .first();
+            .catchError()
+            .await();
         if (sourceFolderElement == null)
         {
             sourceFolderElement = XMLElement.create(IntellijModule.orderEntryElementName)

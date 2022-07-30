@@ -41,7 +41,7 @@ public class IntellijModuleLibrary extends XMLElementWrapperBase
         PreCondition.assertNotNullAndNotEmpty(childElementName, "childElementName");
         PreCondition.assertNotNull(setupChildElement, "setupChildElement");
 
-        XMLElement result = parentElement.getElementChildren(childElementName).first();
+        XMLElement result = parentElement.getElementChildren(childElementName).first().catchError().await();
         if (result == null)
         {
             result = XMLElement.create(childElementName);
